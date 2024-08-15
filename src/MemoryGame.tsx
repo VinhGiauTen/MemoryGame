@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 export default function Game() {
-  const initialArray = [1, 2, 3, 4, 5, 6, 7, 8];
+  const initialArray = [1, 2];
   const [array, setArray] = useState(generateArray(initialArray));
   const [isFlipped, setIsFlipped] = useState(Array(array.length).fill(false));
   const [gameStarted, setGameStarted] = useState(false);
@@ -11,6 +11,10 @@ export default function Game() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [step, setStep] = useState(0);
   const [isDisable, setDisable] = useState(false);
+  const [isPause, setPause] = useState(false);
+  const [pauseTime, setPauseTime] = useState(0);
+  const [gameOption, setOption] = useState(2);
+  const [idPlay, setIdPlay] = useState(0);
 
   function generateArray(array: number[]) {
     const arr = [...array, ...array];
@@ -20,16 +24,33 @@ export default function Game() {
     }
     return arr;
   }
+  function sufferArray(arr: number[]) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function changeArrSize(gameOption: number) {
+    const size = gameOption;
+    const optionArr = [];
+    for (let i = 1; i <= Math.pow(size, 2) / 2; i++) {
+      optionArr.push(i);
+    }
+    console.log(optionArr);
+    setArray(generateArray(optionArr));
+  }
 
   const handleStart = () => {
+    setIdPlay(idPlay + 1);
     if (gameStarted) {
       setElapsedTime(0);
       setStartTime(0);
       setFlippedIndices([]);
     } else {
+      setArray(sufferArray(array));
       setIsFlipped(Array(array.length).fill(false));
       setMatched(Array(array.length).fill(false));
-      setArray(generateArray(initialArray));
       setStartTime(Date.now());
       setStep(0);
     }
@@ -47,14 +68,23 @@ export default function Game() {
     }
   };
 
+  const handlePause = () => {
+    if (!isPause) {
+      setPauseTime(elapsedTime);
+    } else {
+      setStartTime(Date.now() - pauseTime * 1000);
+    }
+    setPause(!isPause);
+  };
+
   useEffect(() => {
-    if (gameStarted && startTime) {
+    if (gameStarted && startTime && !isPause) {
       const timer = setInterval(() => {
         setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [gameStarted, startTime]);
+  }, [gameStarted, startTime, isPause]);
 
   useEffect(() => {
     if (flippedIndices.length === 2) {
@@ -67,9 +97,7 @@ export default function Game() {
           newMatched[secondIndex] = true;
           return newMatched;
         });
-        setTimeout(() => {
-          setDisable(false);
-        }, 300);
+        setDisable(false);
       } else {
         setTimeout(() => {
           setIsFlipped((prev) => {
@@ -90,27 +118,73 @@ export default function Game() {
     if (matched.every(Boolean)) {
       setGameStarted(false);
     }
+
+    const stepped = step;
+    const time = elapsedTime;
+    const sizeGame = gameOption;
+    const id = idPlay.toString();
+    localStorage.setItem(
+      id,
+      JSON.stringify([
+        { time: time },
+        { step: stepped },
+        { size: sizeGame + "x" + sizeGame },
+      ])
+    );
+    const obj = localStorage.getItem(id);
+    console.log(obj);
   }, [matched]);
+
+  const handleOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newGameOption = Number(event.target.value);
+    setOption(newGameOption);
+    changeArrSize(newGameOption);
+    setIsFlipped(Array(array.length).fill(false));
+    setMatched(Array(array.length).fill(false));
+    setStartTime(Date.now());
+    setStep(0);
+    setElapsedTime(0);
+    setGameStarted(false);
+  };
 
   return (
     <div className="bg-slate-800 h-screen grid place-content-center">
-      {gameStarted
-        ? ""
-        : matched.every(Boolean) && (
-            <div className="text-white text-xl my-3 text-center ">
-              You won in {elapsedTime} seconds!
-            </div>
-          )}
-      <p className="text-white my-1">Steps: {step}</p>
-      <div className="grid grid-cols-4 gap-2 [perspective:1000px]">
+      <div></div>
+      <div>
+        {gameStarted
+          ? ""
+          : matched.every(Boolean) && (
+              <div className="text-white text-xl my-3 text-center ">
+                You won in {elapsedTime} seconds!
+              </div>
+            )}
+      </div>
+      <div className="flex justify-between my-2">
+        <p className="text-white">Steps: {step}</p>
+        <select
+          className="p-1 rounded-md"
+          value={gameOption}
+          onChange={handleOptionChange}
+          disabled={gameStarted}
+        >
+          <option value={2}>2x2</option>
+          <option value={4}>4x4</option>
+          <option value={6}>6x6</option>
+        </select>
+      </div>
+      <div
+        className={`grid gap-2 [perspective:1000px] grid-cols-${gameOption}`}
+      >
         {array.map((a, i) => (
           <div
             key={i}
             style={{
-              pointerEvents: isDisable ? "none" : "auto",
+              pointerEvents: isDisable || isPause ? "none" : "auto",
             }}
-            className={`relative h-24 w-24 rounded-xl shadow-xl transition-all duration-500 [transform-style:preserve-3d] ${
-              isFlipped[i] ? "[transform:rotateY(180deg)]" : "duration-0"
+            className={`relative h-24 w-24 rounded-xl shadow-xl transition-all  [transform-style:preserve-3d] ${
+              isFlipped[i]
+                ? " [transform:rotateY(180deg)] duration-500 "
+                : " duration-0 "
             }`}
           >
             <div
@@ -127,13 +201,22 @@ export default function Game() {
           </div>
         ))}
       </div>
-      <button
-        onClick={handleStart}
-        className="bg-lime-600 text-white font-bold text-xl p-3 my-5 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
-        disabled={gameStarted}
-      >
-        {gameStarted ? elapsedTime : "Start"}
-      </button>
+      <div className="flex space-x-4">
+        <button
+          onClick={handleStart}
+          className="bg-lime-600 text-white font-bold text-xl p-3 my-5 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
+          disabled={gameStarted}
+        >
+          {gameStarted ? (isPause ? pauseTime : elapsedTime) : "Start"}
+        </button>
+        <button
+          onClick={handlePause}
+          className="bg-lime-600 text-white font-bold text-xl p-3 my-5 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
+          disabled={!gameStarted}
+        >
+          {isPause ? "Continue" : "Pause"}
+        </button>
+      </div>
     </div>
   );
 }

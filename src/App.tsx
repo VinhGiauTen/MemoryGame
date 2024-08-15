@@ -77,7 +77,7 @@ export default function App() {
   return (
     <div className="bg-slate-800 h-screen grid place-content-center">
       <p id="root"></p>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-2 group [perspective:1000px]">
         {array.map((a, i) => (
           <button
             key={i}
@@ -100,12 +100,6 @@ export default function App() {
       >
         {isBeginning ? "Stop" : "Start"}
       </button>
-      <div className="group h-96 w-96 [perspective:1000px]">
-        <div className="relative h-full w-full rounded-xl shadow-xl transition-all duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
-          <div className="absolute">0</div>
-          <div className="absolute inset-0 h-full w-full rounded-xl bg-black px-12 text-center text"></div>
-        </div>
-      </div>
     </div>
   );
 }

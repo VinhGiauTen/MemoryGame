@@ -69,7 +69,7 @@ export default function Game() {
         });
         setTimeout(() => {
           setDisable(false);
-        }, 500);
+        }, 300);
       } else {
         setTimeout(() => {
           setIsFlipped((prev) => {

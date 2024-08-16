@@ -7,15 +7,15 @@ type Archie = {
   size: string;
 };
 
-type Stage = {
-  step: number;
-  gameOption: number;
-  array: string;
-  elapsedTime: number;
-  flippedIndices: string;
-  matched: string;
-  isFlipped: string;
-};
+// type Stage = {
+//   step: number;
+//   gameOption: number;
+//   array: string;
+//   elapsedTime: number;
+//   flippedIndices: string;
+//   matched: string;
+//   isFlipped: string;
+// };
 
 export default function Game() {
   const initialArray = [1, 2];

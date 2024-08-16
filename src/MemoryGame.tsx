@@ -306,10 +306,10 @@ export default function Game() {
         <div
           className={`grid  ${
             gameOption === 2
-              ? "grid-cols-2 gap-3 w-1/3 mx-auto  "
+              ? "grid-cols-2 gap-x-9 gap-y-3 w-1/3 mx-auto  "
               : gameOption === 4
-              ? "grid-cols-4 gap-3 w-2/3 mx-auto "
-              : "grid-cols-6 gap-2 p-2 "
+              ? "grid-cols-4 gap-12 gap-y-3 w-2/3 mx-auto "
+              : "grid-cols-6 gap-4 p-1"
           } xl:gap-2 [perspective:1000px]`}
         >
           {array.map((a, i) => (

@@ -280,7 +280,7 @@ export default function Game() {
         </div>
       </div>
       <hr className="p-3 w-11/12 mx-auto xl:hidden" />
-      <div className="p-3 xlw-1/3 xl:mx-auto">
+      <div className="p-3 xl:w-1/3 xl:mx-auto">
         <div>
           {gameStarted
             ? ""

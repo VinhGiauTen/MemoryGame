@@ -7,6 +7,16 @@ type Archie = {
   size: string;
 };
 
+type Stage = {
+  step: number;
+  gameOption: number;
+  array: string;
+  elapsedTime: number;
+  flippedIndices: string;
+  matched: string;
+  isFlipped: string;
+};
+
 export default function Game() {
   const initialArray = [1, 2];
   const [array, setArray] = useState(generateArray(initialArray));
@@ -25,7 +35,8 @@ export default function Game() {
     const savedId = localStorage.getItem("idPlay");
     return savedId ? Number(savedId) : 0;
   });
-  const [archie, setAchie] = useState<Archie[]>([]);
+  const [archie, setArchie] = useState<Archie[]>([]);
+  const [sortOption, setSortOption] = useState("");
 
   function generateArray(array: number[]) {
     const arr = [...array, ...array];
@@ -123,11 +134,43 @@ export default function Game() {
       setFlippedIndices([]);
       setStep(step + 1);
     }
+    if (!matched.every(Boolean)) {
+      const gameStage = {
+        step: step,
+        gameOption: gameOption,
+        array: JSON.stringify(array),
+        elapsedTime: elapsedTime,
+        flippedIndices: JSON.stringify(flippedIndices),
+        matched: JSON.stringify(matched),
+        isFlipped: JSON.stringify(isFlipped),
+      };
+      localStorage.setItem("Game Stage", JSON.stringify(gameStage));
+    }
   }, [flippedIndices, array]);
 
   useEffect(() => {
     localStorage.setItem("idPlay", idPlay.toString());
   }, [idPlay]);
+
+  useEffect(() => {
+    const existingData = JSON.parse(
+      localStorage.getItem("Memory Game") || "[]"
+    );
+    setArchie(existingData);
+
+    // const existingStage = JSON.parse(
+    //   localStorage.getItem("Game Stage") || "[]"
+    // );
+    // existingStage.forEach((e: Stage) => {
+    //   setArray(JSON.parse(e.array));
+    //   setFlippedIndices(JSON.parse(e.flippedIndices));
+    //   setStep(e.step);
+    //   setOption(e.gameOption);
+    //   setElapsedTime(e.elapsedTime);
+    //   setMatched(JSON.parse(e.matched));
+    //   setIsFlipped(JSON.parse(e.isFlipped));
+    // });
+  }, []);
 
   useEffect(() => {
     if (matched.every(Boolean)) {
@@ -136,22 +179,27 @@ export default function Game() {
       const stepped = step;
       const time = elapsedTime;
       const sizeGame = gameOption;
-      const id = idPlay.toString();
+      const id = idPlay;
 
       const existingData = JSON.parse(
         localStorage.getItem("Memory Game") || "[]"
       );
 
-      const newGameData = {
-        id: id,
-        time: time,
-        step: stepped,
-        size: sizeGame + "x" + sizeGame,
-      };
-      const updatedData = [...existingData, newGameData];
-
-      localStorage.setItem("Memory Game", JSON.stringify(updatedData));
-      setAchie(updatedData);
+      const isGameAlreadySaved = existingData.some(
+        (game: Archie) =>
+          game.id === id && game.size === sizeGame + "x" + sizeGame
+      );
+      if (!isGameAlreadySaved) {
+        const newGameData = {
+          id: id,
+          time: time,
+          step: stepped,
+          size: sizeGame + "x" + sizeGame,
+        };
+        const updatedData = [...existingData, newGameData];
+        localStorage.setItem("Memory Game", JSON.stringify(updatedData));
+        setArchie(updatedData);
+      }
     }
   }, [matched.every(Boolean)]);
 
@@ -166,11 +214,41 @@ export default function Game() {
     setElapsedTime(0);
     setGameStarted(false);
   };
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOption(event.target.value);
+  };
+
+  const sortedArchie = [...archie].sort((a, b) => {
+    if (sortOption === "step") {
+      return a.step - b.step;
+    }
+    if (sortOption === "time") {
+      return a.time - b.time;
+    }
+    if (sortOption === "size") {
+      const sizeA = parseFloat(a.size.replace(/[^0-9]/g, ""));
+      const sizeB = parseFloat(b.size.replace(/[^0-9]/g, ""));
+      return sizeA - sizeB;
+    }
+    return 0;
+  });
+
   return (
     <div className="bg-slate-800 h-screen grid place-content-center">
       <div className="">
-        <div className="table absolute text-white w-1/3 top-5 left-10">
-          <div className="table-caption text-xl text-center my-2">
+        <select
+          className="p-1 rounded-md absolute top-7 left-80 z-10"
+          value={sortOption}
+          onChange={handleSortChange}
+        >
+          <option value={""}>Sắp xếp theo</option>
+          <option value={"step"}>Step</option>
+          <option value={"time"}>Time</option>
+          <option value={"size"}>Size</option>
+        </select>
+        <div className="table absolute text-white w-1/4 top-5 left-10">
+          <div className="table-caption font-semibold text-xl my-2">
             Top Ranking
           </div>
           <div className="table-header-group">
@@ -182,7 +260,7 @@ export default function Game() {
             </div>
           </div>
           <div className="table-row-group">
-            {archie.map((a) => (
+            {sortedArchie.map((a) => (
               <div className="table-row" key={a.id}>
                 <div className="table-cell">{a.id}</div>
                 <div className="table-cell">{a.step}</div>

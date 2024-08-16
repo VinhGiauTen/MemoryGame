@@ -7,17 +7,6 @@ type Archie = {
   size: string;
 };
 
-type Stage = {
-  step: number;
-  gameOption: number;
-  array: string;
-  elapsedTime: number;
-  flippedIndices: string;
-  matched: string;
-  isFlipped: string;
-  isPause: string;
-};
-
 export default function Game() {
   const initialArray = [1, 2];
   const [array, setArray] = useState(generateArray(initialArray));
@@ -64,6 +53,24 @@ export default function Game() {
     setArray(generateArray(optionArr));
   }
 
+  const handleRestore = () => {
+    const existingStage = JSON.parse(
+      localStorage.getItem("Game Stage") || "[]"
+    );
+    if (Object.keys(existingStage).length > 0) {
+      setIdPlay(existingStage.idGame);
+      setArray(JSON.parse(existingStage.arrayGame));
+      setFlippedIndices(JSON.parse(existingStage.flippedIndicesGame));
+      setStep(existingStage.stepGame);
+      setOption(existingStage.gameOptionGame);
+      setPauseTime(existingStage.elapsedTimeGame);
+      setMatched(JSON.parse(existingStage.matchedGame));
+      setIsFlipped(JSON.parse(existingStage.isFlippedGame));
+      setPause(!existingStage.isPauseGame);
+      setGameStarted(true);
+    }
+  };
+
   const handleStart = () => {
     setIdPlay(idPlay + 1);
     if (gameStarted) {
@@ -100,22 +107,6 @@ export default function Game() {
     setPause(!isPause);
   };
 
-  const handleRestore = () => {
-    const existingStage = JSON.parse(
-      localStorage.getItem("Game Stage") || "[]"
-    );
-    existingStage.forEach((e: Stage) => {
-      setArray(JSON.parse(e.array));
-      setFlippedIndices(JSON.parse(e.flippedIndices));
-      setStep(e.step);
-      setOption(e.gameOption);
-      setElapsedTime(e.elapsedTime);
-      setMatched(JSON.parse(e.matched));
-      setIsFlipped(JSON.parse(e.isFlipped));
-      setPause(Boolean(e.isPause));
-    });
-  };
-
   useEffect(() => {
     if (gameStarted && startTime && !isPause) {
       const timer = setInterval(() => {
@@ -150,19 +141,20 @@ export default function Game() {
       }
       setFlippedIndices([]);
       setStep(step + 1);
-    }
-    if (!matched.every(Boolean)) {
-      const gameStage = {
-        step: step,
-        gameOption: gameOption,
-        array: JSON.stringify(array),
-        elapsedTime: elapsedTime,
-        flippedIndices: JSON.stringify(flippedIndices),
-        matched: JSON.stringify(matched),
-        isFlipped: JSON.stringify(isFlipped),
-        isPause: isPause,
-      };
-      localStorage.setItem("Game Stage", JSON.stringify(gameStage));
+      if (!matched.every(Boolean)) {
+        const gameStage = {
+          idGame: idPlay,
+          stepGame: step,
+          gameOptionGame: gameOption,
+          arrayGame: JSON.stringify(array),
+          elapsedTimeGame: elapsedTime,
+          flippedIndicesGame: JSON.stringify(flippedIndices),
+          matchedGame: JSON.stringify(matched),
+          isFlippedGame: JSON.stringify(isFlipped),
+          isPauseGame: isPause,
+        };
+        localStorage.setItem("Game Stage", JSON.stringify(gameStage));
+      }
     }
   }, [flippedIndices, array]);
 
@@ -280,7 +272,7 @@ export default function Game() {
         </div>
       </div>
       <hr className="p-3 w-11/12 mx-auto xl:hidden" />
-      <div className="xl:w-1/3 xl:mx-auto">
+      <div className="xl:w-1/2 xl:mx-auto">
         <div>
           {gameStarted
             ? ""
@@ -290,7 +282,7 @@ export default function Game() {
                 </div>
               )}
         </div>
-        <div className="flex justify-between my-2 p-3">
+        <div className="flex justify-between my-2 p-3 xl:w-2/3 mx-auto">
           <p className="text-white">Steps: {step}</p>
           <select
             className="p-1 rounded-md"
@@ -304,13 +296,13 @@ export default function Game() {
           </select>
         </div>
         <div
-          className={`grid  ${
+          className={`grid ${
             gameOption === 2
-              ? "grid-cols-2 gap-x-9 gap-y-3 w-1/3 mx-auto  "
+              ? "grid-cols-2 gap-x-7 gap-y-3 w-1/3 xl:w-1/5 xl:gap-x-4 "
               : gameOption === 4
-              ? "grid-cols-4 gap-12 gap-y-3 w-2/3 mx-auto "
-              : "grid-cols-6 gap-4 p-1"
-          } xl:gap-2 [perspective:1000px]`}
+              ? "grid-cols-4 gap-12 gap-y-3 w-2/3 xl:w-5/12"
+              : "grid-cols-6 gap-x-8 gap-y-3 p-1 xl:w-2/3 "
+          } xl:gap-2 mx-auto [perspective:1000px]`}
         >
           {array.map((a, i) => (
             <div
@@ -338,7 +330,7 @@ export default function Game() {
             </div>
           ))}
         </div>
-        <div className="flex space-x-4 mt-5 p-3">
+        <div className="flex space-x-4 mt-5 p-3 xl:w-2/3 mx-auto">
           <button
             onClick={handleStart}
             className="bg-lime-600 text-white font-bold text-xl p-3 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
@@ -361,12 +353,6 @@ export default function Game() {
             disabled={gameStarted}
           >
             Restore
-          </button>
-          <button
-            className="bg-lime-600 text-white font-bold text-xl p-3 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
-            disabled={gameStarted}
-          >
-            Save
           </button>
         </div>
       </div>

@@ -241,7 +241,7 @@ export default function Game() {
   });
 
   return (
-    <div className="bg-slate-800 h-full xl:h-screen grid xl:items-center">
+    <div className="bg-slate-800 h-fit xl:h-screen grid xl:items-center">
       <div className="xl:absolute top-5 left-10 xl:w-1/5">
         <div className="flex justify-between p-3">
           <div className="text-white font-semibold text-xl m-1">
@@ -280,7 +280,7 @@ export default function Game() {
         </div>
       </div>
       <hr className="p-3 w-11/12 mx-auto xl:hidden" />
-      <div className="p-3 xl:w-1/3 xl:mx-auto">
+      <div className="xl:w-1/3 xl:mx-auto">
         <div>
           {gameStarted
             ? ""
@@ -290,7 +290,7 @@ export default function Game() {
                 </div>
               )}
         </div>
-        <div className="flex justify-between my-2">
+        <div className="flex justify-between my-2 p-3">
           <p className="text-white">Steps: {step}</p>
           <select
             className="p-1 rounded-md"
@@ -306,10 +306,10 @@ export default function Game() {
         <div
           className={`grid  ${
             gameOption === 2
-              ? "grid-cols-2 gap-2 w-1/3 mx-auto  "
+              ? "grid-cols-2 gap-3 w-1/3 mx-auto  "
               : gameOption === 4
-              ? "grid-cols-4 gap-1 w-2/3 mx-auto "
-              : "grid-cols-6 gap-1 "
+              ? "grid-cols-4 gap-3 w-2/3 mx-auto "
+              : "grid-cols-6 gap-2 p-2 "
           } xl:gap-2 [perspective:1000px]`}
         >
           {array.map((a, i) => (
@@ -338,7 +338,7 @@ export default function Game() {
             </div>
           ))}
         </div>
-        <div className="flex space-x-4 my-5">
+        <div className="flex space-x-4 mt-5 p-3">
           <button
             onClick={handleStart}
             className="bg-lime-600 text-white font-bold text-xl p-3 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
@@ -354,7 +354,7 @@ export default function Game() {
             {isPause ? "Continue" : "Pause"}
           </button>
         </div>
-        <div className="flex space-x-4">
+        <div className="flex space-x-4 p-3">
           <button
             onClick={handleRestore}
             className="bg-lime-600 text-white font-bold text-xl p-3 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"

@@ -7,15 +7,16 @@ type Archie = {
   size: string;
 };
 
-// type Stage = {
-//   step: number;
-//   gameOption: number;
-//   array: string;
-//   elapsedTime: number;
-//   flippedIndices: string;
-//   matched: string;
-//   isFlipped: string;
-// };
+type Stage = {
+  step: number;
+  gameOption: number;
+  array: string;
+  elapsedTime: number;
+  flippedIndices: string;
+  matched: string;
+  isFlipped: string;
+  isPause: string;
+};
 
 export default function Game() {
   const initialArray = [1, 2];
@@ -99,6 +100,22 @@ export default function Game() {
     setPause(!isPause);
   };
 
+  const handleRestore = () => {
+    const existingStage = JSON.parse(
+      localStorage.getItem("Game Stage") || "[]"
+    );
+    existingStage.forEach((e: Stage) => {
+      setArray(JSON.parse(e.array));
+      setFlippedIndices(JSON.parse(e.flippedIndices));
+      setStep(e.step);
+      setOption(e.gameOption);
+      setElapsedTime(e.elapsedTime);
+      setMatched(JSON.parse(e.matched));
+      setIsFlipped(JSON.parse(e.isFlipped));
+      setPause(Boolean(e.isPause));
+    });
+  };
+
   useEffect(() => {
     if (gameStarted && startTime && !isPause) {
       const timer = setInterval(() => {
@@ -143,6 +160,7 @@ export default function Game() {
         flippedIndices: JSON.stringify(flippedIndices),
         matched: JSON.stringify(matched),
         isFlipped: JSON.stringify(isFlipped),
+        isPause: isPause,
       };
       localStorage.setItem("Game Stage", JSON.stringify(gameStage));
     }
@@ -157,19 +175,6 @@ export default function Game() {
       localStorage.getItem("Memory Game") || "[]"
     );
     setArchie(existingData);
-
-    // const existingStage = JSON.parse(
-    //   localStorage.getItem("Game Stage") || "[]"
-    // );
-    // existingStage.forEach((e: Stage) => {
-    //   setArray(JSON.parse(e.array));
-    //   setFlippedIndices(JSON.parse(e.flippedIndices));
-    //   setStep(e.step);
-    //   setOption(e.gameOption);
-    //   setElapsedTime(e.elapsedTime);
-    //   setMatched(JSON.parse(e.matched));
-    //   setIsFlipped(JSON.parse(e.isFlipped));
-    // });
   }, []);
 
   useEffect(() => {
@@ -218,8 +223,9 @@ export default function Game() {
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSortOption(event.target.value);
   };
-
-  const sortedArchie = [...archie].sort((a, b) => {
+  const sortedResults = [...archie].sort((a, b) => b.id - a.id);
+  const latestResults = sortedResults.slice(0, 10).sort((a, b) => a.id - b.id);
+  const gameResults = [...latestResults].sort((a, b) => {
     if (sortOption === "step") {
       return a.step - b.step;
     }
@@ -235,23 +241,25 @@ export default function Game() {
   });
 
   return (
-    <div className="bg-slate-800 h-screen grid place-content-center">
-      <div className="">
-        <select
-          className="p-1 rounded-md absolute top-7 left-80 z-10"
-          value={sortOption}
-          onChange={handleSortChange}
-        >
-          <option value={""}>Sắp xếp theo</option>
-          <option value={"step"}>Step</option>
-          <option value={"time"}>Time</option>
-          <option value={"size"}>Size</option>
-        </select>
-        <div className="table absolute text-white w-1/4 top-5 left-10">
-          <div className="table-caption font-semibold text-xl my-2">
+    <div className="bg-slate-800 h-full xl:h-screen grid xl:items-center">
+      <div className="xl:absolute top-5 left-10 xl:w-1/5">
+        <div className="flex justify-between p-3">
+          <div className="text-white font-semibold text-xl m-1">
             Top Ranking
           </div>
-          <div className="table-header-group">
+          <select
+            className="p-1 rounded-md"
+            value={sortOption}
+            onChange={handleSortChange}
+          >
+            <option value={""}>Sắp xếp theo</option>
+            <option value={"step"}>Step</option>
+            <option value={"time"}>Time</option>
+            <option value={"size"}>Size</option>
+          </select>
+        </div>
+        <div className="table p-5 text-white w-full text-lg">
+          <div className="table-header-group font-semibold">
             <div className="table-row">
               <div className="table-cell text-left">Player</div>
               <div className="table-cell text-left">Step</div>
@@ -260,7 +268,7 @@ export default function Game() {
             </div>
           </div>
           <div className="table-row-group">
-            {sortedArchie.map((a) => (
+            {gameResults.map((a) => (
               <div className="table-row" key={a.id}>
                 <div className="table-cell">{a.id}</div>
                 <div className="table-cell">{a.step}</div>
@@ -271,78 +279,96 @@ export default function Game() {
           </div>
         </div>
       </div>
-      <div>
-        {gameStarted
-          ? ""
-          : matched.every(Boolean) && (
-              <div className="text-white text-xl my-3 text-center ">
-                You won in {elapsedTime} seconds!
-              </div>
-            )}
-      </div>
-      <div className="flex justify-between my-2">
-        <p className="text-white">Steps: {step}</p>
-        <select
-          className="p-1 rounded-md"
-          value={gameOption}
-          onChange={handleOptionChange}
-          disabled={gameStarted}
-        >
-          <option value={2}>2x2</option>
-          <option value={4}>4x4</option>
-          <option value={6}>6x6</option>
-        </select>
-      </div>
-      <div
-        className={`grid gap-2 ${
-          gameOption === 2
-            ? "grid-cols-2"
-            : gameOption === 4
-            ? "grid-cols-4"
-            : "grid-cols-6"
-        } [perspective:1000px]`}
-      >
-        {array.map((a, i) => (
-          <div
-            key={i}
-            style={{
-              pointerEvents: isDisable || isPause ? "none" : "auto",
-            }}
-            className={`relative h-24 w-24 rounded-xl shadow-xl transition-all  [transform-style:preserve-3d] ${
-              isFlipped[i]
-                ? " [transform:rotateY(180deg)] duration-500 "
-                : " duration-0 "
-            }`}
+      <hr className="p-3 w-11/12 mx-auto xl:hidden" />
+      <div className="p-3 w-1/3 mx-auto">
+        <div>
+          {gameStarted
+            ? ""
+            : matched.every(Boolean) && (
+                <div className="text-white text-2xl font-bold my-3 text-center ">
+                  You won in {elapsedTime} seconds!
+                </div>
+              )}
+        </div>
+        <div className="flex justify-between my-2">
+          <p className="text-white">Steps: {step}</p>
+          <select
+            className="p-1 rounded-md"
+            value={gameOption}
+            onChange={handleOptionChange}
+            disabled={gameStarted}
           >
+            <option value={2}>2x2</option>
+            <option value={4}>4x4</option>
+            <option value={6}>6x6</option>
+          </select>
+        </div>
+        <div
+          className={`grid  ${
+            gameOption === 2
+              ? "grid-cols-2 gap-2 w-1/3 mx-auto  "
+              : gameOption === 4
+              ? "grid-cols-4 gap-1 w-2/3 mx-auto "
+              : "grid-cols-6 gap-1 "
+          } xl:gap-2 [perspective:1000px]`}
+        >
+          {array.map((a, i) => (
             <div
-              className={`absolute inset-0 h-full w-full rounded-lg font-bold flex justify-center items-center text-4xl bg-orange-500 [backface-visibility:hidden]`}
-              onClick={() => handleClick(i)}
-            ></div>
-            <div
-              className={`absolute inset-0 h-full w-full rounded-lg font-bold flex justify-center items-center text-4xl ${
-                matched[i] ? "bg-blue-500 transition " : "bg-fuchsia-500"
-              } text-white px-12 text-center [transform:rotateY(180deg)] [backface-visibility:hidden]`}
+              key={i}
+              style={{
+                pointerEvents: isDisable || isPause ? "none" : "auto",
+              }}
+              className={`relative h-16 w-16 xl:h-24 xl:w-24 rounded-xl shadow-xl transition-all [transform-style:preserve-3d] ${
+                isFlipped[i]
+                  ? " [transform:rotateY(180deg)] duration-500 "
+                  : " duration-0 "
+              }`}
             >
-              {a}
+              <div
+                className={`absolute inset-0 h-full w-full rounded-lg font-bold flex justify-center items-center text-4xl bg-orange-500 [backface-visibility:hidden]`}
+                onClick={() => handleClick(i)}
+              ></div>
+              <div
+                className={`absolute inset-0 h-full w-full rounded-lg font-bold flex justify-center items-center text-3xl xl:text-4xl ${
+                  matched[i] ? "bg-blue-500 transition " : "bg-fuchsia-500"
+                } text-white xl:px-12 text-center [transform:rotateY(180deg)] [backface-visibility:hidden]`}
+              >
+                {a}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex space-x-4">
-        <button
-          onClick={handleStart}
-          className="bg-lime-600 text-white font-bold text-xl p-3 my-5 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
-          disabled={gameStarted}
-        >
-          {gameStarted ? (isPause ? pauseTime : elapsedTime) : "Start"}
-        </button>
-        <button
-          onClick={handlePause}
-          className="bg-lime-600 text-white font-bold text-xl p-3 my-5 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
-          disabled={!gameStarted}
-        >
-          {isPause ? "Continue" : "Pause"}
-        </button>
+          ))}
+        </div>
+        <div className="flex space-x-4 my-5">
+          <button
+            onClick={handleStart}
+            className="bg-lime-600 text-white font-bold text-xl p-3 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
+            disabled={gameStarted}
+          >
+            {gameStarted ? (isPause ? pauseTime : elapsedTime) : "Start"}
+          </button>
+          <button
+            onClick={handlePause}
+            className="bg-lime-600 text-white font-bold text-xl p-3 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
+            disabled={!gameStarted}
+          >
+            {isPause ? "Continue" : "Pause"}
+          </button>
+        </div>
+        <div className="flex space-x-4">
+          <button
+            onClick={handleRestore}
+            className="bg-lime-600 text-white font-bold text-xl p-3 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
+            disabled={gameStarted}
+          >
+            Restore
+          </button>
+          <button
+            className="bg-lime-600 text-white font-bold text-xl p-3 rounded-lg w-1/2 mx-auto hover:bg-opacity-80 transition disabled:bg-slate-400 disabled:cursor-not-allowed"
+            disabled={gameStarted}
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
   );

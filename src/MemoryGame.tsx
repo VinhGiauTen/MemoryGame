@@ -119,20 +119,20 @@ export default function Game() {
       setGameStarted(false);
     }
 
-    const stepped = step;
-    const time = elapsedTime;
-    const sizeGame = gameOption;
-    const id = idPlay.toString();
-    localStorage.setItem(
-      id,
-      JSON.stringify([
-        { time: time },
-        { step: stepped },
-        { size: sizeGame + "x" + sizeGame },
-      ])
-    );
-    const obj = localStorage.getItem(id);
-    console.log(obj);
+    // const stepped = step;
+    // const time = elapsedTime;
+    // const sizeGame = gameOption;
+    // const id = idPlay.toString();
+    // localStorage.setItem(
+    //   id,
+    //   JSON.stringify([
+    //     { time: time },
+    //     { step: stepped },
+    //     { size: sizeGame + "x" + sizeGame },
+    //   ])
+    // );
+    // const obj = localStorage.getItem(id);
+    // console.log(obj);
   }, [matched]);
 
   const handleOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -146,7 +146,7 @@ export default function Game() {
     setElapsedTime(0);
     setGameStarted(false);
   };
-
+  console.log(gameOption);
   return (
     <div className="bg-slate-800 h-screen grid place-content-center">
       <div></div>
@@ -173,7 +173,7 @@ export default function Game() {
         </select>
       </div>
       <div
-        className={`grid gap-2 [perspective:1000px] grid-cols-${gameOption}`}
+        className={`grid gap-2 grid-cols-${gameOption} [perspective:1000px] `}
       >
         {array.map((a, i) => (
           <div

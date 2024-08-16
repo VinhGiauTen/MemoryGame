@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 
+type Archie = {
+  id: number;
+  step: number;
+  time: number;
+  size: string;
+};
+
 export default function Game() {
   const initialArray = [1, 2];
   const [array, setArray] = useState(generateArray(initialArray));
@@ -14,7 +21,11 @@ export default function Game() {
   const [isPause, setPause] = useState(false);
   const [pauseTime, setPauseTime] = useState(0);
   const [gameOption, setOption] = useState(2);
-  const [idPlay, setIdPlay] = useState(0);
+  const [idPlay, setIdPlay] = useState(() => {
+    const savedId = localStorage.getItem("idPlay");
+    return savedId ? Number(savedId) : 0;
+  });
+  const [archie, setAchie] = useState<Archie[]>([]);
 
   function generateArray(array: number[]) {
     const arr = [...array, ...array];
@@ -115,25 +126,34 @@ export default function Game() {
   }, [flippedIndices, array]);
 
   useEffect(() => {
+    localStorage.setItem("idPlay", idPlay.toString());
+  }, [idPlay]);
+
+  useEffect(() => {
     if (matched.every(Boolean)) {
       setGameStarted(false);
-    }
 
-    // const stepped = step;
-    // const time = elapsedTime;
-    // const sizeGame = gameOption;
-    // const id = idPlay.toString();
-    // localStorage.setItem(
-    //   id,
-    //   JSON.stringify([
-    //     { time: time },
-    //     { step: stepped },
-    //     { size: sizeGame + "x" + sizeGame },
-    //   ])
-    // );
-    // const obj = localStorage.getItem(id);
-    // console.log(obj);
-  }, [matched]);
+      const stepped = step;
+      const time = elapsedTime;
+      const sizeGame = gameOption;
+      const id = idPlay.toString();
+
+      const existingData = JSON.parse(
+        localStorage.getItem("Memory Game") || "[]"
+      );
+
+      const newGameData = {
+        id: id,
+        time: time,
+        step: stepped,
+        size: sizeGame + "x" + sizeGame,
+      };
+      const updatedData = [...existingData, newGameData];
+
+      localStorage.setItem("Memory Game", JSON.stringify(updatedData));
+      setAchie(updatedData);
+    }
+  }, [matched.every(Boolean)]);
 
   const handleOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newGameOption = Number(event.target.value);
@@ -146,10 +166,33 @@ export default function Game() {
     setElapsedTime(0);
     setGameStarted(false);
   };
-  console.log(gameOption);
   return (
     <div className="bg-slate-800 h-screen grid place-content-center">
-      <div></div>
+      <div className="">
+        <div className="table absolute text-white w-1/3 top-5 left-10">
+          <div className="table-caption text-xl text-center my-2">
+            Top Ranking
+          </div>
+          <div className="table-header-group">
+            <div className="table-row">
+              <div className="table-cell text-left">Player</div>
+              <div className="table-cell text-left">Step</div>
+              <div className="table-cell text-left">Time</div>
+              <div className="table-cell text-left">Size</div>
+            </div>
+          </div>
+          <div className="table-row-group">
+            {archie.map((a) => (
+              <div className="table-row" key={a.id}>
+                <div className="table-cell">{a.id}</div>
+                <div className="table-cell">{a.step}</div>
+                <div className="table-cell">{a.time}</div>
+                <div className="table-cell">{a.size}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       <div>
         {gameStarted
           ? ""
@@ -173,7 +216,13 @@ export default function Game() {
         </select>
       </div>
       <div
-        className={`grid gap-2 grid-cols-${gameOption} [perspective:1000px] `}
+        className={`grid gap-2 ${
+          gameOption === 2
+            ? "grid-cols-2"
+            : gameOption === 4
+            ? "grid-cols-4"
+            : "grid-cols-6"
+        } [perspective:1000px]`}
       >
         {array.map((a, i) => (
           <div
